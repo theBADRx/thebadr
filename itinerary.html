@@ -1,0 +1,18 @@
+
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8"><title>Your Itinerary</title><link rel="stylesheet" href="style.css"><script src="data.js"></script></head>
+<body><header><h1>Your Suggested Itinerary</h1><p class="small">Dynamic with Google Maps</p></header>
+<div class="container"><div id="tripSummary" class="summary"></div><div id="arrivalMap" class="card" style="display:none"></div><div id="plan"></div></div>
+<footer>Prototype v4 — Tourism Demo</footer>
+<script>
+function fmtDate(d){return new Date(d).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}
+function addDays(d,n){let x=new Date(d);x.setDate(x.getDate()+n);return x}
+function parseParams(){const p=new URLSearchParams(location.search);return{city:p.get('city')||'Riyadh Airport',date:p.get('date')||new Date().toISOString().slice(0,10),duration:Math.min(30,Math.max(3,parseInt(p.get('duration')||'12')))}}
+function allocateDays(total){let base={Riyadh:4,Jeddah:5,AlUla:3},sum=12,alloc={},rem=total;for(let k in base){alloc[k]=Math.max(1,Math.floor(total*base[k]/sum));rem-=alloc[k]}let order=['Jeddah','Riyadh','AlUla'],i=0;while(rem>0){alloc[order[i%3]]++;rem--;i++}return alloc}
+function mapIframe(q){return `<div class='map-wrap'><iframe class='map-iframe' src='https://www.google.com/maps?q=${q}&output=embed'></iframe></div>`}
+(function(){let p=parseParams();let sum=document.getElementById('tripSummary');sum.innerHTML=`<div class='item'><div>Arrival</div><b>${p.city}</b></div><div class='item'><div>Start</div><b>${fmtDate(p.date)}</b></div><div class='item'><div>Duration</div><b>${p.duration} days</b></div><div class='item'><div>End</div><b>${fmtDate(addDays(p.date,p.duration-1))}</b></div>`;
+let arr=document.getElementById('arrivalMap');arr.style.display='block';arr.innerHTML=`<h2>Arrival — ${p.city}</h2>${mapIframe(p.city)}`;
+let plan=document.getElementById('plan');let alloc=allocateDays(p.duration);let day=0;
+for(let city in alloc){let card=document.createElement('div');card.className='card';card.innerHTML=`<h2>${city} <span class='small'>${alloc[city]} days</span></h2>${mapIframe(DATA[city].mapQuery)}`;for(let d=0;d<alloc[city];d++){if(day>=p.duration)break;let box=document.createElement('div');box.className='day-box';let items=DATA[city].defaults[d%DATA[city].defaults.length];box.innerHTML=`<h3>Day ${day+1} — ${fmtDate(addDays(p.date,day))}</h3><ul>${items.map(x=>'<li>'+x+'</li>').join('')}</ul>`;card.appendChild(box);day++;}plan.appendChild(card);}
+})();
+</script></body></html>
